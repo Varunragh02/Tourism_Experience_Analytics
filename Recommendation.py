@@ -14,7 +14,7 @@ alpha = 0.6        # Weight for collaborative filtering (1 - alpha for content-b
 @st.cache_data
 def load_data():
     # Load and preprocess the data (df)
-    df = pd.read_excel("D:/Guvi/Tourism_Experience_Analysis/Merged_Cleaned.xlsx")
+    df = pd.read_csv("D:/Guvi/Tourism_Experience_Analytics/Merged_Cleaned.csv")
     df = df[['UserId', 'AttractionId', 'Attraction', 'AttractionType', 'CityName', 'Country', 'Rating']].dropna()
     
     # Content-based filtering data (non-cached, computed on-demand)

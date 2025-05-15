@@ -79,9 +79,9 @@ best_model = models[best_model_name]
 if best_model_name == "RandomForest":
     print("🔧 Tuning Random Forest...")
     grid = GridSearchCV(best_model, {
-        'n_estimators': [50, 100],
+        'n_estimators': [50,100],
         'max_depth': [None, 10],
-        'min_samples_split': [2, 5]
+        'min_samples_split': [2, 5,10]
     }, cv=3, scoring='r2', n_jobs=-1)  # Use R² as scoring
     grid.fit(X_train, y_train)
     best_model = grid.best_estimator_
@@ -89,9 +89,9 @@ if best_model_name == "RandomForest":
 elif best_model_name == "GradientBoosting":
     print("🔧 Tuning Gradient Boosting...")
     grid = GridSearchCV(best_model, {
-        'n_estimators': [50, 100],
+        'n_estimators': [50,100],
         'learning_rate': [0.05, 0.1],
-        'max_depth': [3, 5]
+        'max_depth': [3, 5,10]
     }, cv=3, scoring='r2', n_jobs=-1)  # Use R² as scoring
     grid.fit(X_train, y_train)
     best_model = grid.best_estimator_

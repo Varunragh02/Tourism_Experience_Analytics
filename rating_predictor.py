@@ -4,12 +4,12 @@ import numpy as np
 import joblib
 
 # Load model and encoders
-model = joblib.load("D:/Guvi/Tourism_Experience_Analysis/best_model.pkl")
-label_encoders = joblib.load("D:/Guvi/Tourism_Experience_Analysis/label_encoders.pkl")
-scaler = joblib.load("D:/Guvi/Tourism_Experience_Analysis/scaler.pkl")
+model = joblib.load("D:/Guvi/Tourism_Experience_Analytics/best_model.pkl")
+label_encoders = joblib.load("D:/Guvi/Tourism_Experience_Analytics/label_encoders.pkl")
+scaler = joblib.load("D:/Guvi/Tourism_Experience_Analytics/scaler.pkl")
 
 # Load the location mapping CSV
-location_df = pd.read_csv("D:/Guvi/Tourism_Experience_Analysis/location_mapping.csv")
+location_df = pd.read_csv("D:/Guvi/Tourism_Experience_Analytics/location_mapping.csv")
 
 # Extract unique values for continent, country
 continents = location_df['Continent'].unique()

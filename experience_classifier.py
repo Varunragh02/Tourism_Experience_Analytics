@@ -1,17 +1,28 @@
+# experience_classifier.py
+
 import streamlit as st
+import pandas as pd
+import joblib
+import numpy as np
 
 # ✅ Must be the first Streamlit command
 st.set_page_config(page_title="Tourism Experience Classification", layout="centered")
 
-import pandas as pd
-import joblib
-
 # --- Load Model and Encoders ---
 @st.cache_resource
 def load_model_and_encoders():
-    model = joblib.load("D:/Guvi/Tourism_Experience_Analysis/best_classification_model.pkl")
-    label_encoders = joblib.load("D:/Guvi/Tourism_Experience_Analysis/label_encoders.pkl")
-    location_df = pd.read_csv("D:/Guvi/Tourism_Experience_Analysis/location_mapping.csv")
+    model = joblib.load("D:/Guvi/Tourism_Experience_Analytics/best_classification_model.pkl")
+    label_encoders = joblib.load("D:/Guvi/Tourism_Experience_Analytics/label_encoders.pkl")
+    location_df = pd.read_csv("D:/Guvi/Tourism_Experience_Analytics/location_mapping.csv")
+
+    # Clean placeholder values
+    location_df = location_df[
+        (location_df['Continent'] != '-') &
+        (location_df['Country'] != '-') &
+        (location_df['Region'] != '-') &
+        (location_df['CityName'] != '-')
+    ]
+
     return model, label_encoders, location_df
 
 model, label_encoders, location_df = load_model_and_encoders()
@@ -44,10 +55,18 @@ city = st.selectbox("City", filtered_cities)
 visit_month = st.selectbox("Visit Month", list(range(1, 13)), format_func=lambda x: pd.to_datetime(str(x), format="%m").strftime("%B"))
 visit_year = st.selectbox("Visit Year", list(range(2015, 2026)))
 
+# --- Safe Encoding Function ---
+def safe_label_encode(encoder, value, field_name):
+    try:
+        return encoder.transform([value])[0]
+    except ValueError:
+        st.warning(f"⚠️ The {field_name} value '{value}' was not seen during training. Please choose another.")
+        st.stop()
+
 # --- Encode Inputs ---
-region_encoded = label_encoders['Region'].transform([region])[0]
-city_encoded = label_encoders['CityName'].transform([city])[0]
-attraction_encoded = label_encoders['AttractionType'].transform([attraction_type])[0]
+region_encoded = safe_label_encode(label_encoders['Region'], region, "Region")
+city_encoded = safe_label_encode(label_encoders['CityName'], city, "City")
+attraction_encoded = safe_label_encode(label_encoders['AttractionType'], attraction_type, "Attraction Type")
 
 # --- Construct Input DataFrame ---
 df_input = pd.DataFrame({
@@ -60,8 +79,8 @@ df_input = pd.DataFrame({
 
 # One-hot encode Continent and Country
 categorical_flags = {
-    'Continent_' + continent: 1,
-    'Country_' + country: 1,
+    f'Continent_{continent}': 1,
+    f'Country_{country}': 1,
     'AttractionTypeId': attraction_encoded
 }
 
@@ -70,12 +89,12 @@ dummy_cols = [col for col in model.feature_names_in_ if col.startswith('Continen
 for col in dummy_cols:
     df_input[col] = categorical_flags.get(col, 0)
 
-# Ensure all model input columns are present
+# Ensure all required model input columns are present
 for col in model.feature_names_in_:
-    if col not in df_input:
+    if col not in df_input.columns:
         df_input[col] = 0
 
-# Reorder columns to match model
+# Reorder columns to match model input
 df_input = df_input[model.feature_names_in_]
 
 # --- Class Mapping ---
@@ -90,6 +109,13 @@ class_mapping = {
 # --- Predict ---
 if st.button("Classify Experience"):
     prediction = model.predict(df_input)[0]
-    class_label = prediction
+    st.write("🔍 Raw model prediction:", prediction)
+
+    # Handle numeric or string class prediction
+    if isinstance(prediction, (int, float, np.integer)):
+        class_label = class_mapping.get(int(prediction), "Unknown")
+    else:
+        class_label = str(prediction)
+
     st.success(f"⭐ Predicted Experience Category: **{class_label}**")
     st.balloons()
